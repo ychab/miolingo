@@ -1,0 +1,71 @@
+name: Units
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  units:
+    name: units
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python: ["3.10"]
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Update pip and install dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install tox
+
+      - name: Copy django settings
+        run: cp miolingo/settings/local.py.dist miolingo/settings/local.py
+
+      - name: Edit django settings
+        run: sed -i 's/<SECRET_KEY>/Mo4ocFeHT5Yi0hRyodrO/g' miolingo/settings/local.py
+
+      - name: Run tox CI
+        run: tox -e xml
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          MIOLINGO_SECRET_KEY: Mo4ocFeHT5Yi0hRyodrO
+
+      - name: Make Units Badge
+        uses: action-badges/cobertura-coverage-xml-badges@0.2.1
+        with:
+          label: units
+          file-name: units.svg
+          badge-branch: badges
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          coverage-file-name: ./coverage.xml

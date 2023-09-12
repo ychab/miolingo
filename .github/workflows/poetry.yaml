@@ -1,0 +1,33 @@
+name: Poetry Deps
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  poetry:
+    name: poetry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Update pip and install dependencies
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install tox
+
+      - name: Run tox poetry
+        run: tox -e poetry

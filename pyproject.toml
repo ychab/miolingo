@@ -1,0 +1,82 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "miolingo"
+version = "1.0.0"
+description = "A language-learning app to suit your needs"
+authors = ["Yannick Chabbert <yannick.chabbert.it@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+psycopg = "^3.1.10"
+django = "^4.2.5"
+djangorestframework = "^3.14.0"
+drf-yasg = "^1.21.7"
+django-cors-headers = "^4.2.0"
+deepl = "^1.15.0"
+django-filter = "^23.3"
+djangorestframework-simplejwt = {extras = ["crypto"], version = "^5.3.0"}
+
+[tool.poetry.group.test.dependencies]
+tblib = "^2.0.0"
+factory-boy = "^3.3.0"
+requests-mock = "^1.11.0"
+tox = "^4.11.3"
+coverage = {extras = ["toml"], version = "^7.3.1"}
+
+[tool.poetry.group.dev.dependencies]
+django-extensions = "^3.2.3"
+django-debug-toolbar = "^4.2.0"
+pre-commit = "^3.5.0"
+black = "^23.10.0"
+pylama = {extras = ["toml"], version = "^8.4.1"}
+isort = "^5.12.0"
+
+[tool.black]
+line-lenght = 119
+target-version = ["py310"]
+extend-exclude = "/migrations/|/settings/"
+
+[tool.pylama]
+skip = "*/.tox/*,*/migrations/*,*/settings/*,*/static/*"
+linters = "pycodestyle,pyflakes,mccabe"
+
+[tool.pylama.linter.pycodestyle]
+max_line_length = 119
+
+[tool.pylama.linter.mccabe]
+complexity = 15
+
+[tool.isort]
+profile = "black"
+skip = "migrations"
+sections = "FUTURE,STDLIB,DJANGO,REST_FRAMEWORK,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+known_django = "django"
+known_rest_framework = "rest_framework"
+known_first_party = "miolingo"
+
+[tool.coverage.run]
+source = [ "miolingo" ]
+branch = true
+omit = [
+    "manage.py",
+    "miolingo/asgi.py",
+    "miolingo/wsgi.py",
+    "miolingo/**/admin.py",
+    "miolingo/settings/dev.py",
+    "miolingo/settings/local.py",
+    "miolingo/settings/prod.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "def __str__",
+    "def __repr__",
+]
